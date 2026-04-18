@@ -1,10 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
 import JSZip from "jszip";
 import { readdirSync, readFileSync, statSync } from "fs";
 import { join, relative } from "path";
 import { buildFileManifest, inferTemplate, type BlueprintInput } from "@/lib/code-generator";
-
-// ─── Read template files from disk ────────────────────────────────────────────
+import { jsonResponse } from "@/lib/api-json-response";
 
 function readTemplateFiles(dir: string, base = dir): Array<{ path: string; content: string }> {
   const result: Array<{ path: string; content: string }> = [];
@@ -29,9 +27,7 @@ function readTemplateFiles(dir: string, base = dir): Array<{ path: string; conte
   return result;
 }
 
-// ─── POST /api/generate/download ──────────────────────────────────────────────
-
-export async function POST(req: NextRequest): Promise<NextResponse | Response> {
+export async function POST(req: Request): Promise<Response> {
   try {
     const body = (await req.json()) as {
       blueprint: BlueprintInput;
@@ -40,7 +36,7 @@ export async function POST(req: NextRequest): Promise<NextResponse | Response> {
     const { blueprint, projectId } = body;
 
     if (!blueprint?.project_name) {
-      return NextResponse.json(
+      return jsonResponse(
         { error: "Invalid blueprint: missing project_name" },
         { status: 400 }
       );
@@ -49,12 +45,11 @@ export async function POST(req: NextRequest): Promise<NextResponse | Response> {
     const pid = projectId ?? blueprint.project_id ?? "generated_project";
     const templateName = inferTemplate(blueprint);
 
-    // Read all template source files from disk
     const templateDir = join(process.cwd(), "templates", templateName);
     const templateFiles = readTemplateFiles(templateDir);
 
     if (templateFiles.length === 0) {
-      return NextResponse.json(
+      return jsonResponse(
         {
           error: "Template files not found.",
           details: `Ensure templates/${templateName}/ exists.`,
@@ -63,7 +58,6 @@ export async function POST(req: NextRequest): Promise<NextResponse | Response> {
       );
     }
 
-    // Build the full file manifest (fills blueprint-config.ts, adds .env.local)
     const manifest = buildFileManifest(
       blueprint,
       pid,
@@ -72,7 +66,6 @@ export async function POST(req: NextRequest): Promise<NextResponse | Response> {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
     );
 
-    // Pack into a ZIP
     const zip = new JSZip();
     for (const file of manifest) {
       zip.file(file.path, file.content);
@@ -99,7 +92,7 @@ export async function POST(req: NextRequest): Promise<NextResponse | Response> {
     });
   } catch (err) {
     console.error("[/api/generate/download] Error:", err);
-    return NextResponse.json(
+    return jsonResponse(
       { error: "ZIP generation failed", details: String(err) },
       { status: 500 }
     );

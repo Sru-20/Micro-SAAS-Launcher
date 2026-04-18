@@ -1,10 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
 import { readdirSync, readFileSync, statSync } from "fs";
 import { join, relative, dirname } from "path";
 import { buildFileManifest, inferTemplate, type BlueprintInput } from "@/lib/code-generator";
 import { autoDeployGeneratedApp } from "@/lib/auto-deploy";
-
-// ─── Template file reader ─────────────────────────────────────────────────────
+import { jsonResponse } from "@/lib/api-json-response";
 
 function readTemplateFiles(dir: string, base = dir): Array<{ path: string; content: string }> {
   const result: Array<{ path: string; content: string }> = [];
@@ -31,9 +29,7 @@ function readTemplateFiles(dir: string, base = dir): Array<{ path: string; conte
   return result;
 }
 
-// ─── POST /api/generate ───────────────────────────────────────────────────────
-
-export async function POST(req: NextRequest): Promise<NextResponse> {
+export async function POST(req: Request): Promise<Response> {
   try {
     const body = (await req.json()) as {
       blueprint: BlueprintInput;
@@ -43,7 +39,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { blueprint, projectId, deploy } = body;
 
     if (!blueprint?.project_name) {
-      return NextResponse.json(
+      return jsonResponse(
         { error: "Invalid blueprint: missing project_name" },
         { status: 400 }
       );
@@ -52,11 +48,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const pid = projectId ?? blueprint.project_id ?? "generated_project";
     const templateName = inferTemplate(blueprint);
 
-    // Read template files
     const templateDir = join(process.cwd(), "templates", templateName);
     const templateFiles = readTemplateFiles(templateDir);
 
-    // Build full manifest using shared logic
     const manifest = buildFileManifest(
       blueprint,
       pid,
@@ -65,7 +59,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
     );
 
-    // Build file tree summary for display
     const fileTree = manifest.map((f) => ({
       path: f.path,
       size: f.content.length,
@@ -81,7 +74,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         })
       : null;
 
-    return NextResponse.json({
+    return jsonResponse({
       ok: true,
       appName: blueprint.project_name,
       projectId: pid,
@@ -99,12 +92,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               commitMessage: deployResult.commitMessage,
             }
           : deployResult
-          ? { ok: false, error: deployResult.error }
-          : null,
+            ? { ok: false, error: deployResult.error }
+            : null,
     });
   } catch (err) {
     console.error("[/api/generate] Error:", err);
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Generation failed", details: String(err) },
       { status: 500 }
     );
