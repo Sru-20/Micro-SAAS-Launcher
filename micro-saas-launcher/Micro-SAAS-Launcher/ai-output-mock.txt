@@ -1,0 +1,48 @@
+
+// Mock Generated Code - AI Generator Test
+// This is sample code to demonstrate the system
+
+// API Route: /app/api/feedback/route.ts
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  return NextResponse.json({ message: "Feedback list" });
+}
+
+export async function POST(req: Request) {
+  const body = await req.json();
+  return NextResponse.json({ message: "Feedback saved", data: body });
+}
+
+// React Component: components/FeedbackForm.tsx
+"use client";
+import { useState } from "react";
+
+export default function FeedbackForm() {
+  const [message, setMessage] = useState("");
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json();
+    console.log(data);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="p-4 border rounded">
+      <textarea 
+        value={message} 
+        onChange={(e) => setMessage(e.target.value)}
+        className="w-full p-2 border rounded"
+        placeholder="Enter your feedback..."
+      />
+      <button type="submit" className="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
+        Submit
+      </button>
+    </form>
+  );
+}
