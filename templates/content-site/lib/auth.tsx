@@ -65,18 +65,20 @@ function sessionToAuthUser(u: SupabaseUser | null): AuthUser | null {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(() => !ENABLE_AUTH);
 
   useEffect(() => {
-    if (!ENABLE_AUTH) {
-      setUser(null);
-      setIsReady(true);
+    if (!ENABLE_AUTH || hasSupabaseEnv()) {
       return;
     }
-
-    if (!hasSupabaseEnv()) {
-      setUser(typeof window !== "undefined" ? readDemoUser() : null);
+    void Promise.resolve().then(() => {
+      setUser(readDemoUser());
       setIsReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!ENABLE_AUTH || !hasSupabaseEnv()) {
       return;
     }
 
