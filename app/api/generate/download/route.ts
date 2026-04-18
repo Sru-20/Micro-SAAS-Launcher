@@ -31,13 +31,13 @@ function readTemplateFiles(dir: string, base = dir): Array<{ path: string; conte
 
 // ─── POST /api/generate/download ──────────────────────────────────────────────
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse | Response> {
   try {
-    const body = await req.json();
-    const { blueprint, projectId } = body as {
+    const body = (await req.json()) as {
       blueprint: BlueprintInput;
       projectId?: string;
     };
+    const { blueprint, projectId } = body;
 
     if (!blueprint?.project_name) {
       return NextResponse.json(
