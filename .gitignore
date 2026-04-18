@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+# generated app output from CLI / API (use templates/ as source)
+/output/
 
 # production
 /build
