@@ -19,6 +19,9 @@
 # generated app output from CLI / API (use templates/ as source)
 /output/
 
+# accidental nested clone of this repo (do not commit)
+/Micro-SAAS-Launcher/
+
 # production
 /build
 

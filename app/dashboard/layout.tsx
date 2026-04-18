@@ -33,16 +33,10 @@ export default async function DashboardLayout({
             Overview
           </Link>
           <Link
-            href="/dashboard/builder"
+            href="/builder"
             className="block rounded px-2 py-1 hover:bg-slate-800"
           >
             Blueprint Builder
-          </Link>
-          <Link
-            href="/dashboard/apps"
-            className="block rounded px-2 py-1 hover:bg-slate-800"
-          >
-            Your Apps
           </Link>
         </nav>
         <form

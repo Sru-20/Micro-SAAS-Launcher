@@ -108,7 +108,7 @@ export default function BuilderPage() {
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                onClick={() => router.push(`/dashboard/builder/${projectId}`)}
+                onClick={() => router.push(`/builder/${projectId}`)}
               >
                 Open generated app
               </Button>

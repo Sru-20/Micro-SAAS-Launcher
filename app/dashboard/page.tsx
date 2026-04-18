@@ -53,7 +53,7 @@ export default async function DashboardHomePage() {
                 </div>
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link href={`/dashboard/builder/${project.id}`}>Open app</Link>
+                <Link href={`/builder/${project.id}`}>Open app</Link>
               </Button>
             </div>
           ))}
