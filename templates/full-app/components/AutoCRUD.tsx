@@ -1,21 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { dbTableName } from "@/lib/blueprint-config";
+import { hasSupabaseEnv, supabase } from "@/lib/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type FieldDef = { name: string; type: string };
 type Row = Record<string, unknown>;
-
-// ─── Supabase singleton ───────────────────────────────────────────────────────
-
-function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createClient(url, key);
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -139,7 +131,6 @@ export default function AutoCRUD({
   projectId: string;
   fields: FieldDef[];
 }) {
-  const supabase = useMemo(() => getSupabase(), []);
   const dbTable = useMemo(() => dbTableName(tableName), [tableName]);
   const visibleFields = useMemo(() => fields.filter((f) => !isSystem(f.name)), [fields]);
 
@@ -153,6 +144,14 @@ export default function AutoCRUD({
   const fetchRows = useCallback(async () => {
     setLoading(true);
     setError(null);
+    if (!hasSupabaseEnv()) {
+      setError(
+        "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY — add them to .env.local to sync this table."
+      );
+      setRows([]);
+      setLoading(false);
+      return;
+    }
     const { data, error: err } = await supabase
       .from(dbTable)
       .select("*")
@@ -161,24 +160,39 @@ export default function AutoCRUD({
     if (err) setError(err.message);
     else setRows((data ?? []) as Row[]);
     setLoading(false);
-  }, [supabase, tableName, projectId]);
+  }, [dbTable, projectId]);
 
-  useEffect(() => { fetchRows(); }, [fetchRows]);
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchRows();
+    });
+  }, [fetchRows]);
 
   const onCreate = async (values: Record<string, unknown>) => {
+    if (!hasSupabaseEnv()) {
+      setError("Configure Supabase env vars before creating rows.");
+      return;
+    }
     setBusy(true);
     const { error: err } = await supabase
       .from(dbTable)
       .insert({ project_id: projectId, ...values });
     setBusy(false);
-    if (err) { setError(err.message); return; }
+    if (err) {
+      setError(err.message);
+      return;
+    }
     setMode("list");
-    fetchRows();
+    void fetchRows();
   };
 
   const onUpdate = async (values: Record<string, unknown>) => {
     const id = editing ? rowId(editing) : null;
     if (!id) return;
+    if (!hasSupabaseEnv()) {
+      setError("Configure Supabase env vars before updating rows.");
+      return;
+    }
     setBusy(true);
     const { error: err } = await supabase
       .from(dbTable)
@@ -186,15 +200,22 @@ export default function AutoCRUD({
       .eq("id", id)
       .eq("project_id", projectId);
     setBusy(false);
-    if (err) { setError(err.message); return; }
+    if (err) {
+      setError(err.message);
+      return;
+    }
     setMode("list");
     setEditing(null);
-    fetchRows();
+    void fetchRows();
   };
 
   const onDelete = async (row: Row) => {
     const id = rowId(row);
     if (!id) return;
+    if (!hasSupabaseEnv()) {
+      setError("Configure Supabase env vars before deleting rows.");
+      return;
+    }
     if (!window.confirm(`Delete this row from "${tableName}"?`)) return;
     setBusy(true);
     const { error: err } = await supabase
@@ -204,7 +225,7 @@ export default function AutoCRUD({
       .eq("project_id", projectId);
     setBusy(false);
     if (err) setError(err.message);
-    else fetchRows();
+    else void fetchRows();
   };
 
   return (
@@ -246,7 +267,7 @@ export default function AutoCRUD({
         <InlineForm
           fields={fields}
           initialValues={Object.fromEntries(
-            visibleFields.map((f) => [f.name, (editing as any)[f.name] ?? ""])
+            visibleFields.map((f) => [f.name, editing[f.name] ?? ""])
           )}
           submitLabel={busy ? "Saving…" : "Save"}
           disabled={busy}
@@ -279,7 +300,7 @@ export default function AutoCRUD({
                   return (
                     <tr key={id}>
                       {visibleFields.map((f) => (
-                        <td key={f.name}>{String((row as any)[f.name] ?? "")}</td>
+                        <td key={f.name}>{String(row[f.name] ?? "")}</td>
                       ))}
                       <td>
                         <div className="row-actions">

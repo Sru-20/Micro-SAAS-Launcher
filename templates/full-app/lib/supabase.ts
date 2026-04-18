@@ -1,10 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
+"use client";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { createBrowserClient } from "@supabase/ssr";
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error("Missing Supabase environment variables. Check .env.local");
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const supabase = createBrowserClient(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseKey || "placeholder-key"
+);
+
+export function hasSupabaseEnv() {
+  return Boolean(supabaseUrl && supabaseKey);
 }
-
-export const supabase = createClient(supabaseUrl, supabaseKey);

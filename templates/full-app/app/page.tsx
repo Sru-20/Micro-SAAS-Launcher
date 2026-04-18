@@ -1,5 +1,5 @@
 import Hero from "@/components/Hero";
-import { pageConfigs, navPages, APP_NAME } from "@/lib/blueprint-config";
+import { pageConfigs, APP_NAME } from "@/lib/blueprint-config";
 
 // Find the landing page config from navPages + pageConfigs
 function getLandingHero() {

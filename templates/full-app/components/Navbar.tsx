@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ENABLE_AUTH } from "@/lib/blueprint-config";
+import { useAuth } from "@/lib/auth";
 
 interface NavPage {
   name: string;
@@ -22,6 +24,7 @@ function pageHref(page: NavPage): string {
 
 export default function Navbar({ pages, logoText }: NavbarProps) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   const navLinks = pages.map((page) => ({
     label: page.name,
@@ -31,13 +34,11 @@ export default function Navbar({ pages, logoText }: NavbarProps) {
   return (
     <nav className="navbar">
       <div className="navbar-inner">
-        {/* Logo */}
         <Link href="/" className="navbar-logo">
           <span className="navbar-logo-icon">⚡</span>
           {logoText}
         </Link>
 
-        {/* Links */}
         <ul className="navbar-links">
           {navLinks.map((link) => {
             const isActive =
@@ -57,10 +58,27 @@ export default function Navbar({ pages, logoText }: NavbarProps) {
           })}
         </ul>
 
-        {/* CTA */}
-        <Link href="/dashboard" className="navbar-cta">
-          Dashboard
-        </Link>
+        <div className="navbar-right" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <Link href="/dashboard" className="navbar-cta">
+            Dashboard
+          </Link>
+          {ENABLE_AUTH ? (
+            user ? (
+              <>
+                <span className="user-pill" style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
+                  {user.name}
+                </span>
+                <button type="button" className="btn-outline" onClick={() => void logout()}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="btn-primary-sm">
+                Login
+              </Link>
+            )
+          ) : null}
+        </div>
       </div>
     </nav>
   );

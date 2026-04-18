@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface FooterProps {
   appName?: string;
 }
@@ -15,8 +17,12 @@ export default function Footer({ appName = "App" }: FooterProps) {
           © {year} {appName}. Built with Micro-SaaS Launcher.
         </span>
         <div className="footer-links">
-          <a href="/" className="footer-link">Home</a>
-          <a href="/dashboard" className="footer-link">Dashboard</a>
+          <Link href="/" className="footer-link">
+            Home
+          </Link>
+          <Link href="/dashboard" className="footer-link">
+            Dashboard
+          </Link>
         </div>
       </div>
     </footer>

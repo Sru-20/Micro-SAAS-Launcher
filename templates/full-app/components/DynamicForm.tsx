@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
+import { hasSupabaseEnv, supabase } from "@/lib/supabase";
 import { dbTableName } from "@/lib/blueprint-config";
 
 export type FieldDef = { name: string; type: string };
@@ -79,7 +79,11 @@ export default function DynamicForm({
 
     try {
       if (tableName && projectId) {
-        // ── Standalone mode: write directly to Supabase ──
+        if (!hasSupabaseEnv()) {
+          throw new Error(
+            "Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local to save to the database."
+          );
+        }
         const { error: supabaseError } = await supabase
           .from(dbTableName(tableName))
           .insert({ project_id: projectId, ...coerced });
