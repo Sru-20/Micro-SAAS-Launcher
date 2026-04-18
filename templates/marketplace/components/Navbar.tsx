@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ENABLE_AUTH } from "@/lib/blueprint-config";
 import { useAuth } from "@/lib/auth";
 
 function NavLink({
@@ -37,18 +38,20 @@ export default function Navbar({ logoText }: { logoText: string }) {
         </div>
 
         <div className="navbar-right">
-          {user ? (
-            <div className="user-menu">
-              <span className="user-pill">{user.name}</span>
-              <button className="btn-outline" onClick={() => logout()}>
-                Logout
-              </button>
-            </div>
-          ) : (
-            <Link href="/login" className="btn-primary-sm">
-              Login
-            </Link>
-          )}
+          {ENABLE_AUTH ? (
+            user ? (
+              <div className="user-menu">
+                <span className="user-pill">{user.name}</span>
+                <button type="button" className="btn-outline" onClick={() => void logout()}>
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className="btn-primary-sm">
+                Login
+              </Link>
+            )
+          ) : null}
         </div>
       </div>
     </nav>

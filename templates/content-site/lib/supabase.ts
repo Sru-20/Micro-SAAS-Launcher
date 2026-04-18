@@ -1,14 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
+"use client";
+
+import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const safeUrl = supabaseUrl || "https://example.supabase.co";
-const safeKey = supabaseKey || "public-anon-key";
-
-export const supabase = createClient(safeUrl, safeKey);
+export const supabase = createBrowserClient(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseKey || "placeholder-key"
+);
 
 export function hasSupabaseEnv() {
   return Boolean(supabaseUrl && supabaseKey);
 }
-

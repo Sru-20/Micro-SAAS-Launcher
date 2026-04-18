@@ -1,0 +1,23 @@
+{
+  "project_name": "demo_marketplace",
+  "description": "A fake-functional marketplace template demo",
+  "project_id": "proj_marketplace_demo",
+  "template": "marketplace",
+  "modules": ["auth"],
+  "tables": [
+    {
+      "name": "listings",
+      "fields": [
+        { "name": "id", "type": "uuid" },
+        { "name": "project_id", "type": "text" },
+        { "name": "title", "type": "text" },
+        { "name": "description", "type": "text" },
+        { "name": "price", "type": "numeric" },
+        { "name": "seller_name", "type": "text" },
+        { "name": "created_at", "type": "timestamp" }
+      ]
+    }
+  ],
+  "pages": []
+}
+
